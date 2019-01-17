@@ -29,6 +29,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,17 +41,21 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    EditText loginText;
+    EditText emailText;
     EditText passwordText;
     Button loginButton;
     TextView registerText;
+
+    DBHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        loginText = (EditText) findViewById(R.id.emailEditText);
+        db = new DBHelper(this);
+
+        emailText = (EditText) findViewById(R.id.emailEditText);
         passwordText = (EditText) findViewById(R.id.passwordEditText);
         loginButton = (Button) findViewById(R.id.loginButton);
         registerText = (TextView) findViewById(R.id.registerTextView);
@@ -63,6 +68,24 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                String email = emailText.getText().toString().trim();
+                String password = passwordText.getText().toString().trim();
+                Boolean res = db.CheckUser(email, password);
+
+                if(res)
+                {
+                    Toast.makeText(LoginActivity.this, "Zalogowano pomyślnie", Toast.LENGTH_SHORT).show();
+                    Intent mainPage = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(mainPage);
+                }else{
+                    Toast.makeText(LoginActivity.this, "Błąd logowania", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 }
 
