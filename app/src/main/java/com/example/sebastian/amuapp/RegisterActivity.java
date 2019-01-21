@@ -8,7 +8,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class RegisterActivity extends AppCompatActivity {
+
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+
+    public static final Pattern VALID_ZIP_CODE_REGEX =
+            Pattern.compile("^[0-9]{2}(?:-[0-9]{3})?$", Pattern.CASE_INSENSITIVE);
 
     DBHelper db;
 
@@ -20,6 +29,15 @@ public class RegisterActivity extends AppCompatActivity {
     EditText passwordEditText;
     EditText confirmPasswordEditText;
     Button registerButton;
+
+    String email;
+    String firstName;
+    String lastName;
+    String address;
+    String city;
+    String password;
+    String confPassword;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,33 +55,69 @@ public class RegisterActivity extends AppCompatActivity {
         confirmPasswordEditText = (EditText) findViewById(R.id.confirmPasswordEditText);
         registerButton = (Button) findViewById(R.id.registerButton);
 
+
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailEditText.getText().toString().trim();
-                String firstName = firstNameEditText.getText().toString().trim();
-                String lastName = lastNameEditText.getText().toString().trim();
-                String address = addressEditText.getText().toString().trim();
-                String city = cityEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
-                String confPassword = confirmPasswordEditText.getText().toString().trim();
+                email = emailEditText.getText().toString().trim();
+                firstName = firstNameEditText.getText().toString().trim();
+                lastName = lastNameEditText.getText().toString().trim();
+                address = addressEditText.getText().toString().trim();
+                city = cityEditText.getText().toString().trim();
+                password = passwordEditText.getText().toString().trim();
+                confPassword = confirmPasswordEditText.getText().toString().trim();
 
-                if(password.equals(confPassword))
-                {
+                if (validateEmail() && validatePassword() && validateZipCode()) {
                     long validate = db.AddUser(email, firstName, lastName, address, city, password);
 
-                    if(validate>0) {
+                    if (validate > 0) {
                         Toast.makeText(RegisterActivity.this, "Zarejestrowano pomyślnie", Toast.LENGTH_SHORT).show();
                         Intent loginPage = new Intent(RegisterActivity.this, LoginActivity.class);
                         startActivity(loginPage);
-                    }else{
+                    } else {
                         Toast.makeText(RegisterActivity.this, "Błąd rejestracji", Toast.LENGTH_SHORT).show();
                     }
 
-                }else{
+                } else {
                     Toast.makeText(RegisterActivity.this, "Błąd rejestracji", Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
+    }
+
+    private boolean validatePassword() {
+        if (password.equals(confPassword)) {
+            if (password.length() > 6) {
+                return true;
+            } else {
+                Toast.makeText(RegisterActivity.this, "Hasło powinno posiadać conajmniej 6 znaków", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        } else {
+            Toast.makeText(RegisterActivity.this, "Hasła nie są jednakowe", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    private boolean validateEmail() {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(email);
+        if (!matcher.find()) {
+            Toast.makeText(RegisterActivity.this, "Niepoprawny email", Toast.LENGTH_SHORT).show();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean validateZipCode() {
+        Matcher matcher = VALID_ZIP_CODE_REGEX.matcher(email);
+        if (!matcher.find()) {
+            Toast.makeText(RegisterActivity.this, "Niepoprawny kod pocztowy", Toast.LENGTH_SHORT).show();
+            return false;
+        } else {
+            return true;
+        }
+
     }
 }

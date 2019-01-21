@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity
         CustomListView customListView = new CustomListView(this, restaurantName, restaurantDescription, imgId, restaurantLL);
         mListView.setAdapter(customListView);
 
-        
+
     }
 
     @Override
