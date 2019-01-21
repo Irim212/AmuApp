@@ -1,9 +1,11 @@
 package com.example.sebastian.amuapp;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -17,8 +19,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,34 +32,40 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, LocationListener {
 
     private MapView mMapView;
+    private GoogleMap mMap;
     private static final String MAPVIEW_BUNDLE_KEY = "AIzaSyAEwFg1KVI-lmNu1zodLue9uEqaboOvB0o";
     private FusedLocationProviderClient client;
+
+    private double latitude;
+    private double longtitude;
+
+    public LatLng sydney = new LatLng(-34, 151);
+    private LocationManager locationManager;
+    private Location location;
+
+    ListView mListView;
+    String[] restaurantName = {"Burger King", "Telepizza", "Adu-Dhabi", "BD King", "Nobo-Sushi", "Freetki"};
+    String[] restaurantDescription = {"Najlepsze burgery", "Ciepła pizza, nowe promocje!", "Kebab, pizza, kurczak", "Najlepsze kebaby z baraniny", "Świeże sushi z dostawą do domu", "Frytki z 5 rodzajów ziemniaków!" };
+    Integer[] imgId = {R.drawable.burger_king, R.drawable.telepizza_logo, R.drawable.abudhabi, R.drawable.kebabownia_logo, R.drawable.nobosushi, R.drawable.frytoland};
+    LatLng[] restaurantLL = {new LatLng(53.124830, 18.017960), new LatLng(53.109295,18.053210),  new LatLng(53.159784,18.175251), new LatLng(53.156999,18.161727), new LatLng(53.121900,18.026271), new LatLng(53.121060,18.002044)};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        requestPermission();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        client = LocationServices.getFusedLocationProviderClient(this);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -72,6 +82,22 @@ public class MainActivity extends AppCompatActivity
         mMapView.onCreate(mapViewBundle);
 
         mMapView.getMapAsync(this);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                floatingButtonAction(view);
+
+            }
+        });
+
+        mListView = (ListView) findViewById(R.id.mListView);
+        CustomListView customListView = new CustomListView(this, restaurantName, restaurantDescription, imgId, restaurantLL);
+        mListView.setAdapter(customListView);
+
+        
     }
 
     @Override
@@ -121,11 +147,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_register) {
-
+            startActivity(new Intent(MainActivity.this, RegisterActivity.class));
         } else if (id == R.id.nav_login) {
-
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -166,11 +190,32 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onMapReady(GoogleMap map) {
-        LatLng sydney = new LatLng(-34, 151);
-        map.addMarker(new MarkerOptions().position(new LatLng(-34, 151)).title("Sydney"));
-        map.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
 
+        client = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+        googleMap.setMyLocationEnabled(true);
+        googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+    }
+
+    public void floatingButtonAction(View view) {
+        if (mMap == null) {
+            Snackbar.make(view, "mMap = Null", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        } else {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            location = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
+            onLocationChanged(location);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longtitude), 13));
+        }
     }
 
     @Override
@@ -190,4 +235,17 @@ public class MainActivity extends AppCompatActivity
         super.onLowMemory();
         mMapView.onLowMemory();
     }
+
+    private void requestPermission(){
+        ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        latitude = location.getLatitude();
+        longtitude = location.getLongitude();
+
+    }
 }
+
