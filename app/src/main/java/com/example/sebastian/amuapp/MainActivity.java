@@ -98,6 +98,14 @@ public class MainActivity extends AppCompatActivity
         mListView.setAdapter(customListView);
 
 
+        for(int i = 0; i==restaurantName.length; i++)
+        {
+            mMap.addMarker(new MarkerOptions()
+                    .position(restaurantLL[i])
+                    .title(restaurantName[i])
+            );
+        }
+
     }
 
     @Override
