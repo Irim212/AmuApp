@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -43,13 +44,12 @@ public class MainActivity extends AppCompatActivity
 
     private MapView mMapView;
     private GoogleMap mMap;
-    private static final String MAPVIEW_BUNDLE_KEY = "AIzaSyAEwFg1KVI-lmNu1zodLue9uEqaboOvB0o";
+    private static final String MAPVIEW_BUNDLE_KEY = "";
     private FusedLocationProviderClient client;
 
     private double latitude;
     private double longtitude;
 
-    public LatLng sydney = new LatLng(-34, 151);
     private LocationManager locationManager;
     private Location location;
 
@@ -96,15 +96,6 @@ public class MainActivity extends AppCompatActivity
         mListView = (ListView) findViewById(R.id.mListView);
         CustomListView customListView = new CustomListView(this, restaurantName, restaurantDescription, imgId, restaurantLL);
         mListView.setAdapter(customListView);
-
-
-        for(int i = 0; i==restaurantName.length; i++)
-        {
-            mMap.addMarker(new MarkerOptions()
-                    .position(restaurantLL[i])
-                    .title(restaurantName[i])
-            );
-        }
 
     }
 
@@ -209,6 +200,39 @@ public class MainActivity extends AppCompatActivity
         }
         googleMap.setMyLocationEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+
+
+            mMap.addMarker(new MarkerOptions()
+                    .position(restaurantLL[0])
+                    .title(restaurantName[0])
+            );
+        mMap.addMarker(new MarkerOptions()
+                .position(restaurantLL[1])
+                .title(restaurantName[1])
+        );
+        mMap.addMarker(new MarkerOptions()
+                .position(restaurantLL[2])
+                .title(restaurantName[2])
+        );
+        mMap.addMarker(new MarkerOptions()
+                .position(restaurantLL[3])
+                .title(restaurantName[3])
+        );
+        mMap.addMarker(new MarkerOptions()
+                .position(restaurantLL[4])
+                .title(restaurantName[4])
+        );
+        mMap.addMarker(new MarkerOptions()
+                .position(restaurantLL[5])
+                .title(restaurantName[5])
+        );
+
+
+    }
+
+    public void changeMapPosition (LatLng latLng, int zoom)
+    {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
 
     public void floatingButtonAction(View view) {

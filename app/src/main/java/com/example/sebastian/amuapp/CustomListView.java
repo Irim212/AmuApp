@@ -9,12 +9,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
-
-import org.w3c.dom.Text;
 
 public class CustomListView extends ArrayAdapter<String> {
 
@@ -23,6 +23,7 @@ public class CustomListView extends ArrayAdapter<String> {
     private Integer[] imgid;
     private LatLng[] restaurantLL;
     private Activity context;
+    private ImageButton mShopButton, mMapButton;
 
     public CustomListView(Activity context, String[] restaurantName, String[] restaurantDescription, Integer[] imgid, LatLng[] restaurantLL) {
         super(context, R.layout.listview_component, restaurantName);
@@ -53,6 +54,19 @@ public class CustomListView extends ArrayAdapter<String> {
             viewHolder.mImageView1.setImageResource(imgid[position]);
             viewHolder.mTextView1.setText(restaurantName[position]);
             viewHolder.mTextView2.setText(restaurantDescription[position]);
+            viewHolder.mShopButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+
+            viewHolder.mMapButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
 
         return r;
     }
@@ -62,14 +76,16 @@ public class CustomListView extends ArrayAdapter<String> {
         TextView mTextView1;
         TextView mTextView2;
         ImageView mImageView1;
+        ImageButton mMapButton;
+        ImageButton mShopButton;
         ViewHolder(View view)
         {
             mTextView1 = (TextView) view.findViewById(R.id.mRestaurantName);
             mTextView2 = (TextView) view.findViewById(R.id.mRestaurantDescription);
             mImageView1 = (ImageView) view.findViewById(R.id.mImageView);
-
+            mShopButton = (ImageButton) view.findViewById(R.id.mShopButton);
+            mMapButton = (ImageButton) view.findViewById(R.id.mMapButton);
         }
-
 
     }
 
