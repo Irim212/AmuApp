@@ -2,9 +2,11 @@ package com.example.sebastian.amuapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +59,8 @@ public class CustomListView extends ArrayAdapter<String> {
             viewHolder.mShopButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    Intent orderActivity = new Intent(CustomListView.this.getContext(), OrderActivity.class);
+                    context.startActivity(orderActivity);
                 }
             });
 
