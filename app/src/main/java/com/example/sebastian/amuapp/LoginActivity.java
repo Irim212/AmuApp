@@ -3,6 +3,7 @@ package com.example.sebastian.amuapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -31,6 +32,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.sebastian.amuapp.Common.Common;
+import com.example.sebastian.amuapp.Model.User;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,24 +50,26 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    EditText emailText;
-    EditText passwordText;
+    EditText phoneText, passwordText;
     Button loginButton;
     TextView registerText;
 
-    DBHelper db;
+    FirebaseDatabase db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        db = new DBHelper(this);
-
-        emailText = (EditText) findViewById(R.id.emailEditText);
+        phoneText = (EditText) findViewById(R.id.phoneEditText);
         passwordText = (EditText) findViewById(R.id.passwordEditText);
         loginButton = (Button) findViewById(R.id.loginButton);
         registerText = (TextView) findViewById(R.id.registerTextView);
+
+        //Init Firebase
+        db = FirebaseDatabase.getInstance();
+        final DatabaseReference table_user = db.getReference("User");
 
         registerText.setOnClickListener(new OnClickListener() {
             @Override
@@ -72,18 +83,38 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                String email = emailText.getText().toString().trim();
-                String password = passwordText.getText().toString().trim();
-                Boolean res = db.CheckUser(email, password);
+                final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this);
+                progressDialog.setMessage("Trwa logowanie");
+                progressDialog.show();
 
-                if(res)
-                {
-                    Toast.makeText(LoginActivity.this, "Zalogowano pomyślnie", Toast.LENGTH_SHORT).show();
-                    Intent mainPage = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(mainPage);
-                }else{
-                    Toast.makeText(LoginActivity.this, "Błąd logowania", Toast.LENGTH_SHORT).show();
-                }
+                table_user.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        progressDialog.dismiss();
+                        //Check user exist
+                        if(dataSnapshot.child(phoneText.getText().toString().trim()).exists())
+                        {
+                            User user = dataSnapshot.child(phoneText.getText().toString().trim()).getValue(User.class);
+                            if(user.getPassword().equals(passwordText.getText().toString().trim()))
+                            {
+                                Toast.makeText(LoginActivity.this, "Zalogowano pomyślnie", Toast.LENGTH_SHORT).show();
+                                Intent mainPage = new Intent(LoginActivity.this, MainActivity.class);
+                                Common.currentUser = user;
+                                startActivity(mainPage);
+                            }else{
+                                Toast.makeText(LoginActivity.this, "Błąd logowania", Toast.LENGTH_SHORT).show();
+                            }
+                        }else{
+                            Toast.makeText(LoginActivity.this, "Nie ma takiego użytkownika", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
             }
         });
     }

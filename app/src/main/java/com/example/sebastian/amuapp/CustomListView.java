@@ -39,7 +39,7 @@ public class CustomListView extends ArrayAdapter<String> {
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
 
         View r = convertView;
             ViewHolder viewHolder = null;
@@ -67,7 +67,8 @@ public class CustomListView extends ArrayAdapter<String> {
             viewHolder.mMapButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    MainActivity mainActivity = new MainActivity();
+                    mainActivity.pathBetweenLatLngAndUser(restaurantLL[position]);
                 }
             });
 
