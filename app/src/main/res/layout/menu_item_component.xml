@@ -2,28 +2,31 @@
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
-    app:cardElevation="4dp">
+    android:layout_height="90dp"
+    android:layout_margin="10dp"
+    app:cardElevation="1dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        >
 
         <TextView
             android:id="@+id/foodNameTextView"
-            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="35dp"
+            android:gravity="center"
             android:text="ASDDD11"
+            android:textAlignment="center"
             android:textSize="30dp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/foodDescTextView"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
+            android:layout_height="25dp"
             android:layout_below="@+id/foodNameTextView"
-            android:paddingTop="5dp"
+            android:layout_marginLeft="20dp"
             android:text="ASssddaas"
             android:textSize="20dp"
             android:textStyle="normal" />
@@ -33,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="20dp"
             android:layout_below="@+id/foodDescTextView"
+            android:layout_marginRight="20dp"
             android:gravity="right"
             android:text="211,11"
             android:textSize="15dp"

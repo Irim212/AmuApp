@@ -58,39 +58,35 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 final ProgressDialog progressDialog = new ProgressDialog(RegisterActivity.this);
-                progressDialog.setMessage("Trwa logowanie");
+                progressDialog.setMessage("Trwa rejestracja");
                 progressDialog.show();
 
                 table_user.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        //Check if user already exist
                         if(dataSnapshot.child(phoneEditText.getText().toString().trim()).exists())
                         {
                             progressDialog.dismiss();
                             Toast.makeText(RegisterActivity.this, "Numer telefonu zajęty", Toast.LENGTH_SHORT).show();
-                            System.out.println("WBIAM DO SPRAWDZANIA CZY NUMER ISTNIEJE");
                         }else{
                             progressDialog.dismiss();
                             String email = emailEditText.getText().toString().trim();
                             Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(email);
-                            System.out.println("Sprawdzam maila");
                             if (!matcher.find()) {
                                 Toast.makeText(RegisterActivity.this, "Niepoprawny email", Toast.LENGTH_SHORT).show();
                             } else {
-                                String password = passwordEditText.getText().toString().trim();
-                                String confPassword = confirmPasswordEditText.getText().toString().trim();
+                                password = passwordEditText.getText().toString().trim();
+                                confPassword = confirmPasswordEditText.getText().toString().trim();
                                 System.out.println("Sprawdzam hasło");
                                 if (password.equals(confPassword)) {
                                     if (password.length() >= 6){
-                                        String firstName = firstNameEditText.getText().toString().trim();
-                                        String lastName = lastNameEditText.getText().toString().trim();
-                                        String address = addressEditText.getText().toString().trim();
-                                        String city = cityEditText.getText().toString().trim();
+                                        firstName = firstNameEditText.getText().toString().trim();
+                                        lastName = lastNameEditText.getText().toString().trim();
+                                        address = addressEditText.getText().toString().trim();
+                                        city = cityEditText.getText().toString().trim();
                                         User user = new User(firstName, lastName, email, city, address, password);
                                         table_user.child(phoneEditText.getText().toString().trim()).setValue(user);
                                         Toast.makeText(RegisterActivity.this, "Zarejestrowano pomyślnie", Toast.LENGTH_SHORT).show();
-                                        System.out.println("Wszystko git");
 
                                         Intent loginPage = new Intent(RegisterActivity.this, LoginActivity.class);
                                         startActivity(loginPage);

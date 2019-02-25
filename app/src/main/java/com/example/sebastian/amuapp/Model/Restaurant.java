@@ -1,51 +1,51 @@
 package com.example.sebastian.amuapp.Model;
 
 public class Restaurant {
-    private String name;
-    private String description;
-    private String image;
-    private String latLng;
+    private String Name;
+    private String Description;
+    private String Image;
+    private String LatLng;
 
-    public Restaurant(){
+    public Restaurant() {
 
     }
 
     public Restaurant(String name, String description, String image, String latLng) {
-        this.name = name;
-        this.description = description;
-        this.image = image;
-        this.latLng = latLng;
+        Name = name;
+        Description = description;
+        Image = image;
+        LatLng = latLng;
     }
 
     public String getName() {
-        return name;
+        return Name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        Name = name;
     }
 
     public String getDescription() {
-        return description;
+        return Description;
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        Description = description;
     }
 
     public String getImage() {
-        return image;
+        return Image;
     }
 
     public void setImage(String image) {
-        this.image = image;
+        Image = image;
     }
 
     public String getLatLng() {
-        return latLng;
+        return LatLng;
     }
 
     public void setLatLng(String latLng) {
-        this.latLng = latLng;
+        LatLng = latLng;
     }
 }

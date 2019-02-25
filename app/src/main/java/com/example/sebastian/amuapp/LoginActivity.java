@@ -96,6 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                         if(dataSnapshot.child(phoneText.getText().toString().trim()).exists())
                         {
                             User user = dataSnapshot.child(phoneText.getText().toString().trim()).getValue(User.class);
+                            user.setPhoneNumber(phoneText.getText().toString());
                             if(user.getPassword().equals(passwordText.getText().toString().trim()))
                             {
                                 Toast.makeText(LoginActivity.this, "Zalogowano pomyślnie", Toast.LENGTH_SHORT).show();

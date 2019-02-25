@@ -1,51 +1,51 @@
 package com.example.sebastian.amuapp.Model;
 
 public class Menu {
-    private String foodName;
-    private String foodDesc;
-    private String price;
-    private String restaurantId;
+    private String Name;
+    private String Description;
+    private String Price;
+    private String RestaurantId;
 
-    public Menu(){
+    public Menu() {
 
     }
 
-    public Menu(String foodName, String foodDesc, String price, String restaurantId) {
-        this.foodName = foodName;
-        this.foodDesc = foodDesc;
-        this.price = price;
-        this.restaurantId = restaurantId;
+    public Menu(String name, String description, String price, String restaurantId) {
+        Name = name;
+        Description = description;
+        Price = price;
+        RestaurantId = restaurantId;
     }
 
-    public String getFoodName() {
-        return foodName;
+    public String getName() {
+        return Name;
     }
 
-    public void setFoodName(String foodName) {
-        this.foodName = foodName;
+    public void setName(String name) {
+        Name = name;
     }
 
-    public String getFoodDesc() {
-        return foodDesc;
+    public String getDescription() {
+        return Description;
     }
 
-    public void setFoodDesc(String foodDesc) {
-        this.foodDesc = foodDesc;
+    public void setDescription(String description) {
+        Description = description;
     }
 
     public String getPrice() {
-        return price;
+        return Price;
     }
 
     public void setPrice(String price) {
-        this.price = price;
+        Price = price;
     }
 
     public String getRestaurantId() {
-        return restaurantId;
+        return RestaurantId;
     }
 
     public void setRestaurantId(String restaurantId) {
-        this.restaurantId = restaurantId;
+        RestaurantId = restaurantId;
     }
 }

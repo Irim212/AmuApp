@@ -3,27 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
-    </group>
-
     <item android:title="Konto">
         <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@android:drawable/ic_menu_close_clear_cancel"
+                android:title="Wyloguj" />
             <item
                 android:id="@+id/nav_register"
                 android:icon="?android:attr/actionModePasteDrawable"

@@ -2,6 +2,7 @@ package com.example.sebastian.amuapp.Model;
 
 public class User {
 
+    private String PhoneNumber;
     private String FirstName;
     private String LastName;
     private String Email;
@@ -13,6 +14,7 @@ public class User {
 
     }
 
+
     public User(String firstName, String lastName, String email, String city, String address, String password) {
         FirstName = firstName;
         LastName = lastName;
@@ -20,6 +22,14 @@ public class User {
         City = city;
         Address = address;
         Password = password;
+    }
+
+    public String getPhoneNumber() {
+        return PhoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        PhoneNumber = phoneNumber;
     }
 
     public String getFirstName() {

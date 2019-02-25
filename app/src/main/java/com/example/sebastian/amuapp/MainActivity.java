@@ -9,10 +9,14 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,12 +26,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.sebastian.amuapp.Common.Common;
+import com.example.sebastian.amuapp.Interface.ItemClickListener;
+import com.example.sebastian.amuapp.Model.Restaurant;
+import com.example.sebastian.amuapp.ViewHolder.RestaurantViewHolder;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
@@ -36,20 +44,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,11 +73,8 @@ public class MainActivity extends AppCompatActivity
 
     private  MapView mMapView;
     private static GoogleMap mMap;
-    private static final String MAPVIEW_BUNDLE_KEY = "";
+    private static final String MAPVIEW_BUNDLE_KEY = "AIzaSyAEwFg1KVI-lmNu1zodLue9uEqaboOvB0o";
     private FusedLocationProviderClient client;
-
-    private static double latitude;
-    private static double longtitude;
 
     private LocationManager locationManager;
     private Location location;
@@ -80,10 +82,15 @@ public class MainActivity extends AppCompatActivity
     static ArrayList<LatLng>  markerPoints;
     static Polyline drawedRoute;
 
-    FirebaseDatabase db;
-    DatabaseReference restaurant;
+    private static double latitude;
+    private static double longtitude;
 
-    ListView mListView;
+    static NavigationView navigationView;
+
+    RecyclerView recyclerRestaurant;
+    RecyclerView.LayoutManager layoutManager;
+    FirebaseRecyclerAdapter<Restaurant, RestaurantViewHolder> adapter;
+
     String[] restaurantName = {"Burger King", "Telepizza", "Adu-Dhabi", "BD King", "Nobo-Sushi", "Freetki"};
     String[] restaurantDescription = {"Najlepsze burgery", "Ciepła pizza, nowe promocje!", "Kebab, pizza, kurczak", "Najlepsze kebaby z baraniny", "Świeże sushi z dostawą do domu", "Frytki z 5 rodzajów ziemniaków!" };
     Integer[] imgId = {R.drawable.burger_king, R.drawable.telepizza_logo, R.drawable.abudhabi, R.drawable.kebabownia_logo, R.drawable.nobosushi, R.drawable.frytoland};
@@ -104,26 +111,25 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        //Init Firebase
-        db = FirebaseDatabase.getInstance();
-        restaurant = db.getReference("Restaurant");
+        ArrayList<Restaurant> list;
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         View headerView = navigationView.getHeaderView(0);
-        firstNameTextView = (TextView) findViewById(R.id.firstNameTextView);
-        helloTextView = (TextView) findViewById(R.id.helloTextView);
         if(Common.currentUser!=null)
         {
-            helloTextView.setText("Witaj");
-            firstNameTextView.setText(Common.currentUser.getFirstName());
+            navigationView.getMenu().findItem(R.id.nav_login).setVisible(false);
+            navigationView.getMenu().findItem(R.id.nav_register).setVisible(false);
+        }else{
+            navigationView.getMenu().findItem(R.id.nav_logout).setVisible(false);
         }
 
         Bundle mapViewBundle = null;
         if (savedInstanceState != null) {
             mapViewBundle = savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY);
         }
+        //MapView
         mMapView = (MapView) findViewById(R.id.mapView1);
         mMapView.onCreate(mapViewBundle);
 
@@ -142,11 +148,79 @@ public class MainActivity extends AppCompatActivity
         // Initializing
         markerPoints = new ArrayList<LatLng>();
 
-        mListView = (ListView) findViewById(R.id.mListView);
-        CustomListView customListView = new CustomListView(this, restaurantName, restaurantDescription, imgId, restaurantLL);
-        mListView.setAdapter(customListView);
-
+        recyclerRestaurant = (RecyclerView) findViewById(R.id.mRecyclerView);
+        recyclerRestaurant.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerRestaurant.setLayoutManager(layoutManager);
+        loadRestaurants();
     }
+
+    private void loadRestaurants() {
+        Query mRestaurant = FirebaseDatabase.getInstance().getReference("/Restaurant");
+        FirebaseRecyclerOptions<Restaurant> options =
+                new FirebaseRecyclerOptions.Builder<Restaurant>()
+                        .setQuery(mRestaurant, Restaurant.class)
+                        .build();
+
+        adapter = new FirebaseRecyclerAdapter<Restaurant, RestaurantViewHolder>(options) {
+            @NonNull
+            @Override
+            public RestaurantViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+                View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.listview_component, viewGroup, false);
+                return new RestaurantViewHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(@NonNull final RestaurantViewHolder holder, final int position, @NonNull Restaurant model) {
+                holder.restuarantNameTextView.setText(model.getName());
+                holder.restaurantDescTextView.setText(model.getDescription());
+                Picasso.with(getBaseContext()).load(model.getImage()).into(holder.restaurantImageView);
+
+                LatLng resLatLng;
+                String[] latLng = adapter.getItem(position).getLatLng().split(",");
+                resLatLng =new LatLng(Double.parseDouble(latLng[0]), Double.parseDouble(latLng[1]));
+
+                mMap.addMarker(new MarkerOptions()
+                        .position(resLatLng)
+                        .title(model.getName())
+                );
+
+                final Restaurant clickItem = model;
+                holder.setItemClickListener(new ItemClickListener() {
+                    @Override
+                    public void onClick(View view, int position, boolean isLongClick) {
+                        Toast.makeText(MainActivity.this, ""+clickItem.getName(), Toast.LENGTH_SHORT).show();
+                        LatLng resLatLng;
+                        String[] latLng = adapter.getItem(position).getLatLng().split(",");
+                        resLatLng =new LatLng(Double.parseDouble(latLng[0]), Double.parseDouble(latLng[1]));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(resLatLng, 15));
+                    }
+                });
+                holder.pathButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        LatLng resLatLng;
+                        String[] latLng = clickItem.getLatLng().split(",");
+                        resLatLng =new LatLng(Double.parseDouble(latLng[0]), Double.parseDouble(latLng[1]));
+                        pathBetweenLatLngAndUser(resLatLng);
+                        Toast.makeText(MainActivity.this, ""+clickItem.getName()+"PATH BTN", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                holder.shopButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //get CategoryId and send to OrderActivity
+                        Intent restaurantMenu = new Intent (MainActivity.this, OrderActivity.class);
+                        restaurantMenu.putExtra("RestaurantId", adapter.getRef(position).getKey());
+                        startActivity(restaurantMenu);
+                    }
+                });
+            }
+        };
+        recyclerRestaurant.setAdapter(adapter);
+    }
+
+
 
     @Override
     public void onBackPressed() {
@@ -173,9 +247,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -186,18 +260,16 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_register) {
+        if (id == R.id.nav_register) {
             startActivity(new Intent(MainActivity.this, RegisterActivity.class));
         } else if (id == R.id.nav_login) {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        } else if (id == R.id.nav_logout) {
+            Common.currentUser = null;
+            navigationView.getMenu().findItem(R.id.nav_logout).setVisible(false);
+            navigationView.getMenu().findItem(R.id.nav_login).setVisible(true);
+            navigationView.getMenu().findItem(R.id.nav_register).setVisible(true);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -228,12 +300,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+        adapter.startListening();
         mMapView.onStart();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        adapter.stopListening();
         mMapView.onStop();
     }
 
@@ -249,41 +323,7 @@ public class MainActivity extends AppCompatActivity
         }
         googleMap.setMyLocationEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
-
-
-            mMap.addMarker(new MarkerOptions()
-                    .position(restaurantLL[0])
-                    .title(restaurantName[0])
-            );
-        mMap.addMarker(new MarkerOptions()
-                .position(restaurantLL[1])
-                .title(restaurantName[1])
-        );
-        mMap.addMarker(new MarkerOptions()
-                .position(restaurantLL[2])
-                .title(restaurantName[2])
-        );
-        mMap.addMarker(new MarkerOptions()
-                .position(restaurantLL[3])
-                .title(restaurantName[3])
-        );
-        mMap.addMarker(new MarkerOptions()
-                .position(restaurantLL[4])
-                .title(restaurantName[4])
-        );
-        mMap.addMarker(new MarkerOptions()
-                .position(restaurantLL[5])
-                .title(restaurantName[5])
-        );
-
     }
-
-    public void changeMapPosition (LatLng latLng, int zoom)
-    {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-    }
-
-
 
     @Override
     protected void onPause() {
@@ -309,10 +349,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-
         latitude = location.getLatitude();
         longtitude = location.getLongitude();
+    }
 
+    public void changeMapPosition (LatLng latLng, int zoom)
+    {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
 
     public static void pathBetweenLatLngAndUser(LatLng point) {
@@ -320,68 +363,31 @@ public class MainActivity extends AppCompatActivity
         {
             drawedRoute.remove();
         }
-
-
         markerPoints = new ArrayList<LatLng>();
-
-        // Already two locations
         if(markerPoints.size()>0){
             markerPoints.clear();
         }
-
-        // Adding new item to the ArrayList
         markerPoints.add(new LatLng(latitude, longtitude));
-
-        // Creating MarkerOptions
         MarkerOptions options = new MarkerOptions();
 
-        // Setting the position of the marker
         options.position(new LatLng(latitude, longtitude));
 
-        /**
-         * For the start location, the color of marker is GREEN and
-         * for the end location, the color of marker is RED.
-         */
         if(markerPoints.size()==1){
             options.icon(BitmapDescriptorFactory.
                     defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
         }
 
-        // Add new marker to the Google Map Android API V2
         mMap.addMarker(options);
 
-        // Checks, whether start and end locations are captured
         if(markerPoints.size() >= 1){
             LatLng origin = markerPoints.get(0);
             LatLng dest = point ;
 
-            // Getting URL to the Google Directions API
             String url = getDirectionsUrl(origin, dest);
-
             DownloadTask downloadTask = new DownloadTask();
-
-            // Start downloading json data from Google Directions API
-
             downloadTask.execute(url);
         }
     }
-
-//    public void pathBetweenLatLngAndUser(LatLng point) {
-//
-//
-//            LatLng origin = new LatLng(latitude, longtitude);
-//            LatLng dest = point;
-//
-//            // Getting URL to the Google Directions API
-//            String url = getDirectionsUrl(origin, dest);
-//
-//            DownloadTask downloadTask = new DownloadTask();
-//
-//            // Start downloading json data from Google Directions API
-//
-//            downloadTask.execute(url);
-//
-//    }
 
     private static String getDirectionsUrl(LatLng origin,LatLng dest){
 
@@ -410,7 +416,6 @@ public class MainActivity extends AppCompatActivity
         String url =
                 "https://maps.googleapis.com/maps/api/directions/"+output+"?"
                         +parameters;
-
 
         System.out.println(url);
 
@@ -581,8 +586,6 @@ public class MainActivity extends AppCompatActivity
             onLocationChanged(location);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longtitude), 13));
         }
-
-        //pathBetweenLatLngAndUser();
     }
 }
 
